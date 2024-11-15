@@ -11,6 +11,13 @@ local blankline = spacechar^0 * newline
 local endline = newline * #-blankline
 local priority = P"!"
 
+local notcolon = (wordchar - P":")
+
+function maybe(p) return p^-1 end
+function empty(p)
+  return C(p)/''
+end
+
 -- Actual grammar
 G = P{ "Doc",
   Doc = V"Block"^0;
@@ -20,13 +27,12 @@ G = P{ "Doc",
           + blankline
           + V"Line" );
 
-  Line = Ct(V"Inline"^1) / pandoc.Para;
+  Line = Ct((V"TagsBegin" + V"TagsEnd" + V"Space" + V"Priority" + V"Word")^1) / pandoc.Para;
   BlankLines = blankline^2 / pandoc.LineBreak;
 
-  Inline = V"Content" + V"Space";
+  Content = V"Space" + V"Priority" + V"Word";
+  Word = wordchar^1 / pandoc.Str;
   Space = spacechar^1 / pandoc.Space;
-
-  Content = V"Priority" + V"Word";
 
   Priority = priority 
            * wordchar^1 
@@ -34,7 +40,18 @@ G = P{ "Doc",
                return pandoc.Span(p, {priority=p:sub(2)})
              end;
 
-  Word = wordchar^1 / pandoc.Str;
+  TagsBegin = (notcolon^1 + spacechar^1)^1
+            * P(":")
+            / function(p)
+                return pandoc.Span(p, {tag="begin"})
+              end;
+
+  TagsEnd = spacechar^0
+          * P"#"
+          * Ct(V"Content"^1) 
+          / function(p)
+              return pandoc.Span(p, {tag="end"})
+            end;
 
   Literal = P"{{{"
           * blankline
@@ -45,7 +62,7 @@ G = P{ "Doc",
 }
 
 function parse_exo (source)
-  -- TODO: Currently shoving in the filename, but could do more stuff with tags represented by path
+  -- TODO: Currently shoving in the filename, but could do more stuff with tags represented by path?
   return pandoc.Div{
     pandoc.Header(1, source.name == '' and '<stdin>' or source.name),
     lpeg.match(G, tostring(source.text))
