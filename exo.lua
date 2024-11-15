@@ -21,13 +21,20 @@ G = P{ "Doc",
           + V"Line" );
 
   Line = Ct(V"Inline"^1) / pandoc.Para;
-  BlankLines = blankline^2 / pandoc.HorizontalRule;
+  BlankLines = blankline^2 / pandoc.LineBreak;
+
   Inline = V"Content" + V"Space";
   Space = spacechar^1 / pandoc.Space;
 
-  Content = V"Priority" + V"Words";
-  Priority = priority * wordchar^1 / pandoc.Span;
-  Words = wordchar^1 / pandoc.Str;
+  Content = V"Priority" + V"Word";
+
+  Priority = priority 
+           * wordchar^1 
+           / function(p) 
+               return pandoc.Span(p, {priority=p:sub(2)})
+             end;
+
+  Word = wordchar^1 / pandoc.Str;
 
   Literal = P"{{{"
           * blankline
