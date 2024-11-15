@@ -7,34 +7,34 @@ local whitespacechar = S(" \t\r\n")
 local wordchar = (1 - whitespacechar)
 local spacechar = S(" \t")
 local newline = P"\r"^-1 * P"\n"
-local blanklines = newline * (spacechar^0 * newline)^1
-local endline = newline - blanklines
+local blankline = spacechar^0 * newline
+local endline = newline * #-blankline
 local priority = P"!"
 
 -- Actual grammar
 G = P{ "Doc",
   Doc = V"Block"^0;
 
-  Block = blanklines^0 
-        * V"Line"^1
-        * endline^0;
+  Block = ( V"Literal" 
+          + V"BlankLines"
+          + blankline
+          + V"Line" );
 
   Line = Ct(V"Inline"^1) / pandoc.Para;
+  BlankLines = blankline^2 / pandoc.HorizontalRule;
   Inline = V"Content" + V"Space";
+  Space = spacechar^1 / pandoc.Space;
+
+  Content = V"Priority" + V"Words";
+  Priority = priority * wordchar^1 / pandoc.Span;
+  Words = wordchar^1 / pandoc.Str;
 
   Literal = P"{{{"
-          * blanklines
+          * blankline
           * C((1 - (newline * P"}}}"))^0)
           * newline
           * P"}}}"
           / pandoc.CodeBlock;
-
-  Priority = priority * wordchar^1 / pandoc.Span;
-  Words = wordchar^1 / pandoc.Str;
-
-  Content = V"Priority" + V"Words";
-
-  Space = spacechar^1 / pandoc.Space;
 }
 
 function parse_exo (source)
