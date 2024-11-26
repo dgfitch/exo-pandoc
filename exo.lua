@@ -43,14 +43,14 @@ G = P{ "Doc",
   TagsBegin = (notcolon^1 + spacechar^1)^1
             * P(":")
             / function(p)
-                return pandoc.Span(p, {tag="begin"})
+                return pandoc.Span(pandoc.Strong(p), {tag="begin"})
               end;
 
-  TagsEnd = spacechar^0
-          * P"#"
+  TagsEnd = P"#"
           * Ct(V"Content"^1) 
           / function(p)
-              return pandoc.Span(p, {tag="end"})
+              table.insert(p, 1, '#')
+              return pandoc.Span(pandoc.Emph(p), {tag="end"})
             end;
 
   Literal = P"{{{"
