@@ -7,6 +7,19 @@ References
 - https://pandoc.org/lua-filters.html#module-pandoc
 - https://www.inf.puc-rio.br/~roberto/lpeg/
 
+## Debugging
+
+    brew install luarocks
+    luarocks install croissant
+
+In scripts:
+
+    eval "$(luarocks path --bin)"
+
+In Lua code, to drop to a REPL:
+
+    require "croissant.debugger"()
+
 
 ## HTML
 
