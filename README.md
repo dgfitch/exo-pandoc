@@ -10,16 +10,14 @@ References
 
 ## HTML
 
-Try [Water.css](https://watercss.kognise.dev/): a "drop-in collection of CSS 
-styles to make simple websites just a little nicer." It works well with the 
-HTML documents produced by pandoc, and so it simplifies the production of 
-styled webpages.
-
-	pandoc -s --css='https://cdn.jsdelivr.net/npm/water.css@2/out/water.min.css' …
+Looks like [Water.css](https://watercss.kognise.dev/) is a good minimal 
+solution.
 
 ## PDF
 
-This should be pretty straightforward, except for cross-file links.
+This should be pretty straightforward, except for cross-file links. Needs 
+`pdflatex` and a bunch of stuff from `texlive` but I already have that 
+installed, so not a big deal.
 
 ## Supernote
 
