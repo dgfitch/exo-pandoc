@@ -27,7 +27,32 @@ I = function (tag)
   end)
 end
 
--- Actual grammar
+-- Helper for counting (lol lua)
+function len(t)
+  local c = 0
+  for n in pairs(t) do
+    c = c + 1
+  end
+  return c
+end
+
+-- Helper for dumping
+function dump(o)
+  if type(o) == 'table' then
+    local s = '{ '
+    for k,v in pairs(o) do
+      if type(k) ~= 'number' then k = '"'..k..'"' end
+      s = s .. '['..k..'] = ' .. dump(v) .. ','
+    end
+    return s .. '} '
+  else
+    return tostring(o)
+  end
+end
+
+
+
+-- Main grammar
 G = P{ "Doc",
   Doc = V"Block"^0;
 
@@ -36,12 +61,16 @@ G = P{ "Doc",
           + blankline
           + V"Line" );
 
-  Line = Ct((V"TagsBegin" + V"TagsEnd" + V"Space" + V"Priority" + V"Word")^1) / pandoc.Para;
+  Line = Ct(V"Indents"^0 * (V"TagsBegin" + V"TagsEnd" + V"Space" + V"Priority" + V"Word")^1);
   BlankLines = blankline^2 / pandoc.LineBreak;
 
   Content = V"Space" + V"Priority" + V"Word";
   Word = wordchar^1 / pandoc.Str;
-  Space = spacechar^1 / pandoc.Space;
+  Space = spacechar / pandoc.Space;
+  Indents = spacechar^2
+         / function(p)
+             return pandoc.Span("", {indentlevel=p:len() // 2})
+         end;
 
   Priority = priority 
            * wordchar^1 
@@ -70,12 +99,32 @@ G = P{ "Doc",
           / pandoc.CodeBlock;
 }
 
+
+-- Helper to deal with turning indentation into nested lists
+function reorg (lines)
+  -- TODO
+  print(dump(lines))
+  return lines
+end
+
 function parse_exo (source)
-  -- TODO: Currently shoving in the filename, but could do more stuff with tags represented by folder names in the path?
-  return pandoc.Div{
-    pandoc.Header(1, source.name == '' and '<stdin>' or source.name),
-    lpeg.match(G, tostring(source.text))
-  }
+  text = tostring(source.text)
+
+  -- Currently shoving in the filename, but could do more stuff with tags represented by folder names in the path?
+  header = pandoc.Header(1, source.name == '' and '<stdin>' or source.name)
+
+  -- so why are doc1 and doc2 different?
+  parsed = lpeg.match(G, text)
+  doc1 = pandoc.Div { header, lpeg.match(G, text) }
+  doc2 = pandoc.Div { header, parsed }
+
+  print("\n\ndoc1:\n")
+  print(dump(d))
+  print("\n\ndoc2:\n")
+  print(dump(e))
+  print("\n\nwhat the fuck?\n\n")
+
+  return doc1
 end
 
 function Reader (input)
