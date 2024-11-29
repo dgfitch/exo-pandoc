@@ -119,9 +119,9 @@ function parse_exo (source)
   doc2 = pandoc.Div { header, parsed }
 
   print("\n\ndoc1:\n")
-  print(dump(d))
+  print(dump(doc1))
   print("\n\ndoc2:\n")
-  print(dump(e))
+  print(dump(doc2))
   print("\n\nwhat the fuck?\n\n")
 
   return doc1
