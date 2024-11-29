@@ -3,19 +3,28 @@ local P, S, R, Cf, Cc, Ct, V, Cs, Cg, Cb, B, C, Cmt =
   lpeg.P, lpeg.S, lpeg.R, lpeg.Cf, lpeg.Cc, lpeg.Ct, lpeg.V,
   lpeg.Cs, lpeg.Cg, lpeg.Cb, lpeg.B, lpeg.C, lpeg.Cmt
 
-local whitespacechar = S(" \t\r\n")
-local wordchar = (1 - whitespacechar)
+local loc = lpeg.locale()
+
+local wordchar = (1 - loc.space)
 local spacechar = S(" \t")
 local newline = P"\r"^-1 * P"\n"
 local blankline = spacechar^0 * newline
 local endline = newline * #-blankline
-local priority = P"!"
 
+local priority = P"!"
 local notcolon = (wordchar - P":")
 
 function maybe(p) return p^-1 end
 function empty(p)
   return C(p)/''
+end
+
+-- Helper, add in grammars like `I'Name' * "name"`
+I = function (tag)
+  return lpeg.P(function ()
+    print(tag)
+    return true
+  end)
 end
 
 -- Actual grammar
@@ -62,7 +71,7 @@ G = P{ "Doc",
 }
 
 function parse_exo (source)
-  -- TODO: Currently shoving in the filename, but could do more stuff with tags represented by path?
+  -- TODO: Currently shoving in the filename, but could do more stuff with tags represented by folder names in the path?
   return pandoc.Div{
     pandoc.Header(1, source.name == '' and '<stdin>' or source.name),
     lpeg.match(G, tostring(source.text))
