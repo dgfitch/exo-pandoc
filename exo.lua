@@ -103,7 +103,8 @@ G = P{ "Doc",
 -- Helper to deal with turning indentation into nested lists
 function reorg (lines)
   -- TODO
-  print(dump(lines))
+  -- require "croissant.debugger"()
+
   return lines
 end
 
@@ -113,18 +114,12 @@ function parse_exo (source)
   -- Currently shoving in the filename, but could do more stuff with tags represented by folder names in the path?
   header = pandoc.Header(1, source.name == '' and '<stdin>' or source.name)
 
-  -- so why are doc1 and doc2 different?
-  parsed = lpeg.match(G, text)
-  doc1 = pandoc.Div { header, lpeg.match(G, text) }
-  doc2 = pandoc.Div { header, parsed }
+  lines = { lpeg.match(G, text) }
+  in_paras = reorg(lines)
 
-  print("\n\ndoc1:\n")
-  print(dump(doc1))
-  print("\n\ndoc2:\n")
-  print(dump(doc2))
-  print("\n\nwhat the fuck?\n\n")
+  doc = pandoc.Div { header, table.unpack(in_paras) }
 
-  return doc1
+  return doc
 end
 
 function Reader (input)
